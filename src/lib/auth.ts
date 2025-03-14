@@ -10,6 +10,15 @@ interface CustomUser {
   token: string
 }
 
+interface LoginResponse {
+  access_token: string
+  token_type: string
+  user?: {
+    email: string
+    name?: string
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -20,33 +29,56 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.error("Missing credentials")
           return null
         }
 
         try {
-          const response = await fetch(`${API_URL}/token`, {
+          console.log('Auth attempt:', {
+            url: `${API_URL}/api/auth/login`,
+            email: credentials.email,
+            apiUrl: API_URL
+          })
+          
+          const response = await fetch(`${API_URL}/api/auth/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({
-              username: credentials.email,
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              email: credentials.email,
               password: credentials.password,
             }),
           })
 
+          console.log('Auth response status:', response.status)
+
           if (!response.ok) {
+            const errorText = await response.text()
+            console.error('Authentication failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText
+            })
             return null
           }
 
-          const data = await response.json()
+          const data = await response.json() as LoginResponse
+          console.log('Auth success:', { email: credentials.email })
           
           return {
             id: credentials.email,
             email: credentials.email,
-            name: credentials.email,
+            name: data.user?.name || credentials.email,
             token: data.access_token,
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          console.error("Auth error details:", {
+            error,
+            apiUrl: API_URL,
+            email: credentials.email
+          })
           return null
         }
       }
@@ -59,12 +91,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log('JWT callback - user found:', { email: user.email })
         token.token = (user as CustomUser).token
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
+        console.log('Session callback - updating token')
         session.user.token = token.token as string
       }
       return session
@@ -72,9 +106,12 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth/login",
+    error: '/auth/error',
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  debug: true,
   secret: process.env.NEXTAUTH_SECRET,
 } 
