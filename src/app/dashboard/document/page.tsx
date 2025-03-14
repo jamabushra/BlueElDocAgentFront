@@ -17,7 +17,7 @@ export default function DocumentExtractionPage() {
   const [isUploading, setIsUploading] = useState(false)
   
   const onDrop = async (acceptedFiles: File[]) => {
-    if (!session?.accessToken) {
+    if (!session || !session.user) {
       toast({
         title: "Authentication error",
         description: "Please login again",
@@ -40,7 +40,7 @@ export default function DocumentExtractionPage() {
       const response = await fetch(`${API_URL}/extract/document`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.user.token}`,
         },
         body: formData,
       })

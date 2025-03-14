@@ -43,13 +43,13 @@ export default function HistoryPage() {
   const taskIdFromUrl = searchParams.get("task")
   
   useEffect(() => {
-    if (!session?.accessToken) return
+    if (!session || !session.user) return
     
     const fetchTasks = async () => {
       try {
         const response = await fetch(`${API_URL}/tasks`, {
           headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${session.user.token}`,
           },
         })
         
@@ -91,7 +91,7 @@ export default function HistoryPage() {
   }, [session, toast, taskIdFromUrl])
   
   const fetchTablePreview = async (task: Task, fileIndex: number) => {
-    if (!session?.accessToken) return
+    if (!session || !session.user) return
     
     setIsLoadingPreview(true)
     setSelectedTask(task)
@@ -100,7 +100,7 @@ export default function HistoryPage() {
     try {
       const response = await fetch(`${API_URL}/preview/${task.task_id}/${fileIndex}`, {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.user.token}`,
         },
       })
       

@@ -43,7 +43,7 @@ export default function EmailExtractionPage() {
   })
   
   const onSubmit = async (values: FormValues) => {
-    if (!session?.accessToken) {
+    if (!session || !session.user) {
       toast({
         title: "Authentication error",
         description: "Please login again",
@@ -59,7 +59,7 @@ export default function EmailExtractionPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.user.token}`,
         },
         body: JSON.stringify(values),
       })

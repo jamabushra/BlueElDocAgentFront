@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { DashboardNav } from '@/components/dashboard/dashboard-nav'
+import { User } from 'next-auth'
 
 export default async function DashboardLayout({
   children,
@@ -16,7 +17,7 @@ export default async function DashboardLayout({
   
   return (
     <div className="flex min-h-screen flex-col">
-      <DashboardNav user={session.user} />
+      <DashboardNav user={session.user as User} />
       <main className="flex-1 p-6">{children}</main>
     </div>
   )

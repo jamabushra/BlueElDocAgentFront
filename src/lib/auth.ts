@@ -3,6 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import { API_URL } from "./constants"
 
+interface CustomUser {
+  id: string
+  email: string
+  name: string
+  token: string
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -36,7 +43,7 @@ export const authOptions: NextAuthOptions = {
             id: credentials.email,
             email: credentials.email,
             name: credentials.email,
-            accessToken: data.access_token,
+            token: data.access_token,
           }
         } catch (error) {
           console.error("Auth error:", error)
@@ -52,12 +59,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.accessToken
+        token.token = (user as CustomUser).token
       }
       return token
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string
+      if (session.user) {
+        session.user.token = token.token as string
+      }
       return session
     },
   },
